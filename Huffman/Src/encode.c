@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "encode.h"
-#include "structs.h"
+#include "huff_defines.h"
 #include "queue.h"
-void presentation()
-{
+
+void presentation() {
     printf("      ___           ___           ___         ___         ___           ___           ___         \n");
     printf("     /__/\\         /__/\\         /  /\\       /  /\\       /__/\\         /  /\\         /__/\\        \n");
     printf("     \\  \\:\\        \\  \\:\\       /  /:/_     /  /:/_     |  |::\\       /  /::\\        \\  \\:\\       \n");
@@ -29,55 +29,70 @@ void presentation()
     printf("    \\  \\::/       \\  \\:\\        \\  \\::/       \\  \\::/        \\__\\/        \\  \\::/       \\  \\:\\    \n");
     printf("     \\__\\/         \\__\\/         \\__\\/         \\__\\/                       \\__\\/         \\__\\/    \n");
 }
-void menu()
-{
+
+void menu() {
     int input;
     system("cls");
     presentation();
     printf("Welcome to the huffman encoder version 2.0\n1 - Compress a file\n2 - Decompress a file\n0 - Exit\n");
-    while (input != 0)
-    {
-        
-        
-        scanf("%d",&input);
+    while (input != 0) {
+
+
+        scanf("%d", &input);
         if (input == 1)
-        compress();
-        
-     
+            compress();
+
+
     }
 }
-void compress()
-{
-    char s[100];
-    unsigned char freq[255] = {0}; 
-    unsigned char c;
-    FILE*file;
-    system("cls");
-    presentation();
-    printf("Type the file's name with it's correct extension:\n");
+
+void compress() {
+
+    int8_t file_name[MAX_FILE_NAME_SIZE];
+
+    uint64_t frequencies_hash[BYTE_RANGE] = {0};
+    uint8_t bytes[BYTE_RANGE];
+    uint8_t current_char;
+
+    FILE* file;
+
+    priority_queue_t* priority_queue = (priority_queue_t*) malloc(sizeof(priority_queue_t));
+
+    /** Enfeite visual */
+    {
+        system("cls");
+        presentation();
+        printf("Type the file's name with it's correct extension:\n");
+    }
+
+    /** Leitura o arquivo */
     char cr;
-    scanf("%s",s);
-    file = fopen(s,"rb");
-    if (file == NULL)
-        {
-            printf("Num deu\n");
-            return;
-        }
-    while (fscanf(file, "%c",&c) != EOF) 
-		freq[c]++;
+    scanf("%s", file_name);
+    file = fopen(file_name, "rb");
+    if (file == NULL) {
+        printf("Num deu\n");
+        return;
+    }
+
+    /**
+     * @brief  Montagem da hash table com as frequências.
+     *
+     * @note Cada índice do array representa um byte, e está sendo usado como chave da hash.
+     */
+    while (fscanf(file, "%c", &current_char) != EOF) {
+        frequencies_hash[current_char] += 1;
+    }
     fclose(file);
-    PQueue *fila;//cria um ponteiro para a cabeça da fila
-    for (int i = 0;i<256;i++)
-        {
-            
-            if(freq[i]!= 0)
-                {
-                    //enqueue(fila,i,freq[i]);
-                    //printf("O byte %d aparece %d vezes\n",i,freq[i]);
-                }
-            
+
+    /** Montagem da fila de prioridades */
+    for (int i = 0; i < BYTE_RANGE; i++) {
+
+        if (frequencies_hash[i] != 0) {
+            enqueue(priority_queue, &frequencies_hash[i], frequencies_hash[i]);
+            printf("O byte %X aparece %llu vezes\n", i, frequencies_hash[i]);
         }
-    
+    }
+
     printf("Do you wish to continue?\n Y/N");
-    scanf("%c",&cr);
+    scanf("%c", &cr);
 }

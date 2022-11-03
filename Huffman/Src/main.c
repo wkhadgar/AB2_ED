@@ -1,5 +1,11 @@
-//
-// Created by paulo on 03/11/2022.
-//
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "encode.h"
+#include "queue.h"
+#include "huff_defines.h"
 
-#include "../Inc/main.h"
+int main() {
+    presentation();
+    menu();
+}
