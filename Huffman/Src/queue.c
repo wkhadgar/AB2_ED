@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "queue.h"
 
+priority_queue_t*create_priority_queue()
+{
+    priority_queue_t*new_queue = (priority_queue_t*) malloc(sizeof(priority_queue_t));
+    new_queue->size = 0;
+    return new_queue;
+}
 bool is_empty(priority_queue_t* priority_queue) {
     return priority_queue->head == NULL;
 }
@@ -38,7 +44,21 @@ void enqueue(priority_queue_t* priority_queue, void* item, uint64_t freq) {
         priority_queue->size++;
     }
 }
-
+node_t* dequeue(priority_queue_t *priority_queue)
+{
+    /**Verifica se a fila está vazia.*/
+    if (is_empty(priority_queue)) {
+        printf("Priority Queue underflow\n");
+        return NULL;
+    } 
+    else {/*Se a fila não estiver vazia, a função remove o nó que está na cabeça.*/
+        node_t *node = priority_queue->head;
+        priority_queue->head = priority_queue->head->next;
+        node->next = NULL;
+        priority_queue->size--;
+        return node;
+    }
+}
 void print_queue(priority_queue_t* priority_queue)
 {
     /**Cria um ponteiro auxiliar, que recebe o endereço da cabeça da fila, para navegar pela fila até o último elemento. */

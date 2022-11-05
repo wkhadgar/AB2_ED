@@ -57,8 +57,7 @@ void compress() {
 
     FILE* file;
 
-    priority_queue_t* priority_queue = (priority_queue_t*) malloc(sizeof(priority_queue_t));
-    priority_queue->size = 0;
+    priority_queue_t* priority_queue = create_priority_queue();
 
     /** Enfeite visual */
     {
@@ -66,7 +65,7 @@ void compress() {
         printf("Type the file's name with it's correct extension:\n");
     }
 
-    /** Leitura o arquivo */
+    /** Leitura do arquivo */
     char cr;
     scanf("%s", file_name);
     file = fopen(file_name, "rb");
@@ -93,8 +92,17 @@ void compress() {
             printf("O byte %X aparece %llu vezes\n", i, frequencies_hash[i]);
         }
     }
-    
-    print_queue(priority_queue);
+    /*Debugging*/
+    {
+        /*Teste do enqueue.*/
+        print_queue(priority_queue);
+        /*Teste da função dequeue.*/
+        node_t*node = dequeue(priority_queue);
+        printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);
+        node = dequeue(priority_queue);
+        printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);
+
+    }
 
     printf("\nDo you wish to decode/decompress the file?\n Y/N\n\n");
     scanf("%c", &cr);

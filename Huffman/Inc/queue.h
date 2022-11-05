@@ -20,7 +20,21 @@ void enqueue(priority_queue_t* priority_queue, void* item, uint64_t freq);
 bool is_empty(priority_queue_t* priority_queue);
 
 /**
+ * @brief Desenfileira o nó da cabeça.
+ * @param priority_queue [in] Ponteiro para a fila de prioridades.
+ * @return Retorna NULL se a fila estiver vazia ou o nó que estava na cabeça
+ */
+node_t* dequeue(priority_queue_t *priority_queue);
+
+/**
  * @brief Imprime na tela todos os elementos da fila.
  * @param priority_queue [in] Ponteiro para a fila de prioridades.
  */
+
 void print_queue(priority_queue_t* priority_queue);
+
+/**
+ * @brief Inicializa a fila de prioridade.
+ * @return Retorna o endereço da alocação.
+ */
+priority_queue_t*create_priority_queue();
