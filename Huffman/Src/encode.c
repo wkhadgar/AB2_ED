@@ -6,6 +6,7 @@
 #include "queue.h"
 
 void presentation() {
+    system("cls");
     printf("      ___           ___           ___         ___         ___           ___           ___         \n");
     printf("     /__/\\         /__/\\         /  /\\       /  /\\       /__/\\         /  /\\         /__/\\        \n");
     printf("     \\  \\:\\        \\  \\:\\       /  /:/_     /  /:/_     |  |::\\       /  /::\\        \\  \\:\\       \n");
@@ -32,7 +33,7 @@ void presentation() {
 
 void menu() {
     int input;
-    system("cls");
+
     presentation();
     printf("Welcome to the huffman encoder version 2.0\n1 - Compress a file\n2 - Decompress a file\n0 - Exit\n");
     while (input != 0) {
@@ -57,10 +58,10 @@ void compress() {
     FILE* file;
 
     priority_queue_t* priority_queue = (priority_queue_t*) malloc(sizeof(priority_queue_t));
+    priority_queue->size = 0;
 
     /** Enfeite visual */
     {
-        system("cls");
         presentation();
         printf("Type the file's name with it's correct extension:\n");
     }
@@ -88,11 +89,15 @@ void compress() {
     for (int i = 0; i < BYTE_RANGE; i++) {
 
         if (frequencies_hash[i] != 0) {
-            enqueue(priority_queue, &frequencies_hash[i], frequencies_hash[i]);
+            enqueue(priority_queue, &i, frequencies_hash[i]);
             printf("O byte %X aparece %llu vezes\n", i, frequencies_hash[i]);
         }
     }
+    
+    print_queue(priority_queue);
 
-    printf("Do you wish to continue?\n Y/N");
+    printf("\nDo you wish to decode/decompress the file?\n Y/N\n\n");
     scanf("%c", &cr);
+    if (cr == 'n')
+        return;
 }

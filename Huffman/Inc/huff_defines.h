@@ -36,9 +36,10 @@ typedef struct node {
 } node_t;
 
 /**
- * @brief Struct da fila de prioridade. A struct consiste em um ponteiro para a cabeça da fila.
+ * @brief Struct da fila de prioridade. A struct consiste em um ponteiro para a cabeça da fila, e um inteiro representando o seu tamanho.
  */
 typedef struct priority_queue {
+    int size;
     node_t* head;
 } priority_queue_t;
 

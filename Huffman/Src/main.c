@@ -6,6 +6,5 @@
 #include "huff_defines.h"
 
 int main() {
-    presentation();
     menu();
 }
