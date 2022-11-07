@@ -4,6 +4,7 @@
 #include "encode.h"
 #include "huff_defines.h"
 #include "queue.h"
+#include "tree.h"
 
 void presentation() {
     system("cls");
@@ -38,12 +39,13 @@ void menu() {
     printf("Welcome to the huffman encoder version 2.0\n1 - Compress a file\n2 - Decompress a file\n0 - Exit\n");
     while (input != 0) {
 
-
         scanf("%d", &input);
-        if (input == 1)
+        if (input == 1){
             compress();
-
-
+        }
+        else if (input == 0){
+            return;
+        }
     }
 }
 
@@ -88,20 +90,29 @@ void compress() {
     for (int i = 0; i < BYTE_RANGE; i++) {
 
         if (frequencies_hash[i] != 0) {
-            enqueue(priority_queue, &i, frequencies_hash[i]);
+            huff_t* huff = create_huff_node(&i,frequencies_hash[i],NULL,NULL);
+            enqueue(priority_queue, huff);
             printf("O byte %X aparece %llu vezes\n", i, frequencies_hash[i]);
         }
     }
-    /*Debugging*/
+    /*Os comandos abaixo são apena para testar a fila.*/
     {
         /*Teste do enqueue.*/
         print_queue(priority_queue);
+        printf("\n\n");
         /*Teste da função dequeue.*/
-        node_t*node = dequeue(priority_queue);
+        /*node_t*node = dequeue(priority_queue);
         printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);
         node = dequeue(priority_queue);
-        printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);
+        printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);*/
 
+    }
+    /*Debugging da árvore.*/
+    {
+        huff_t*tree = create_huff_tree(priority_queue);
+        print_preorder(tree);
+        //print_queue(priority_queue);
+        printf("\n The tree has a size of: %d\n",tree_size(tree));
     }
 
     printf("\nDo you wish to decode/decompress the file?\n Y/N\n\n");

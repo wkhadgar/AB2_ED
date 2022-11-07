@@ -23,6 +23,7 @@
 typedef struct huff {
     void* item;
     uint64_t freq;
+    struct huff* next;
     struct huff* down_left;
     struct huff* down_right;
 } huff_t;
@@ -40,7 +41,7 @@ typedef struct node {
  */
 typedef struct priority_queue {
     int size;
-    node_t* head;
+    huff_t* head;
 } priority_queue_t;
 
 #endif /** HUFF_DEFINES_H */
