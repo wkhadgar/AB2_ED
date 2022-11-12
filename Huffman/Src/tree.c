@@ -31,7 +31,7 @@ huff_t* create_huff_tree(priority_queue_t* priority_queue){
         /*Asterisco para criar o pai.*/
         unsigned char item = 42;
         
-        printf("Criando um pai para os bytes: %X e %X\n",*(unsigned char*)huff1->item,*(unsigned char*)huff2->item);
+        //printf("Criando um pai para os bytes: %X e %X\n",*(unsigned char*)huff1->item,*(unsigned char*)huff2->item);
         
         /*Se a árvore estiver vazia, cria um pai para os últimos dois nós e retorna essa pai como raiz da árvore.*/
         if(priority_queue->size == 0){
@@ -52,9 +52,9 @@ huff_t* create_huff_tree(priority_queue_t* priority_queue){
         }
 
             /*Debugging da arvore.*/
-            printf("Essa e a fila depois das operacoes:\n");
+            /*printf("Essa e a fila depois das operacoes:\n");
             print_queue(priority_queue);
-            printf("\n");
+            printf("\n");*/
     }
     return father;
     
@@ -67,6 +67,8 @@ void print_preorder(huff_t* root){
             printf("%c ",*(unsigned char*)root->item);
         else
             printf("%X ",*(unsigned char*)root->item);
+        //if(root->down_left == NULL && root->down_right == NULL)
+        //printf("%c ",*(unsigned char*)root->item);
         print_preorder(root->down_left);
         print_preorder(root->down_right);
     } 

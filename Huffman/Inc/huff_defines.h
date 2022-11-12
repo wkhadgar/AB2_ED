@@ -44,4 +44,22 @@ typedef struct priority_queue {
     huff_t* head;
 } priority_queue_t;
 
+typedef struct table
+{
+    void* byte;
+    uint64_t freq;
+    unsigned int newbyte;
+    unsigned int shift_bit;
+}table_t;
+
+typedef struct hash
+{
+    table_t* table[BYTE_RANGE];
+    
+}hash_t;
+
+
+
+
+
 #endif /** HUFF_DEFINES_H */

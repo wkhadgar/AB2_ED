@@ -7,4 +7,5 @@
 
 int main() {
     menu();
+    printf("The real huffman encoding are the friends we made along the way.\n\n\n\n\n");
 }
