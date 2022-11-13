@@ -31,11 +31,11 @@ void enqueue(priority_queue_t* priority_queue, huff_t* new_huff) {
 		priority_queue->size++;
 	} else {
 		huff_t* current_node = (huff_t*) priority_queue->head;
-		/** Percorre a fila até chegar no final, ou o nó cuja próxima frequência é maior ou igual que à ser inserida */
-		while ((current_node->next != NULL) && (new_huff_freq > (*(uint64_t*) (*(uint8_t*) current_node->item == '\\'
-																			   ? current_node->left_child
-																			   : current_node->next)->freq))) {
-			current_node = current_node->next;
+		/** Percorre a fila até chegar no final, ou enquanto o novo nó tem frequência maior que o próximo */
+		while ((current_node->next != NULL) && (new_huff_freq > *(uint64_t*) ((*(uint8_t*) current_node->next->item == '\\')
+																			   ? current_node->next->left_child
+																			   : current_node->next)->freq)) {
+			current_node = current_node->next; /**< Avança para o próximo nó */
 		}
 		
 		/** Insere o nó e incrementa o tamanho da fila*/
@@ -86,21 +86,28 @@ huff_t* create_huff_node(void* item, uint64_t freq, huff_t* left_child, huff_t* 
 	new_huff->item = malloc(sizeof(uint8_t));
 	new_huff->freq = malloc((sizeof(uint64_t)));
 	
-	/** Se lê: o conteúdo do item do nó recebe o valor do conteúdo do item do parâmetro */
+	/**
+	 * Faz o item do nó alocado guardar o valor que está sendo apontado pelo item do parâmetro
+	 * Se lê: o conteúdo do item do nó recebe o valor do conteúdo do item do parâmetro
+	 */
 	*(uint8_t*) new_huff->item = *(uint8_t*) item;
 	*(uint64_t*) new_huff->freq = freq;
 	
-	/*Faz o item do nó alocado guardar o valor que está sendo apontado pelo item do parâmetro.*/
 	if (is_before_tree && (*(uint8_t*) item == '\\' || *(uint8_t*) item == '*')) {
-		/** Caso leia '\' ou '*', cria um nó de controle, com item '\' para ler o próximo nó como folha */
+		/**
+		 * Caso leia '\' ou '*' durante a montagem da fila de prioridades,
+		 * cria um nó de controle, apenas com item '\' e filho da esquerda sendo a folha alvo.
+		 *
+		 * Sempre que lermos o '\' na arvore, usamos os valores do seu filho da esquerda como uma folha.
+		 */
 		huff_t* control_node = (huff_t*) malloc(sizeof(huff_t));
-		control_node->left_child = new_huff;
-		control_node->right_child = NULL;
-		control_node->next = NULL;
-		
 		control_node->item = malloc(sizeof(uint8_t));
 		*(uint8_t*) control_node->item = '\\';
+		control_node->right_child = NULL;
+		control_node->next = NULL;
+		control_node->freq = NULL;
 		
+		control_node->left_child = new_huff;
 		return control_node;
 	}
 	

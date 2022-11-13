@@ -41,7 +41,7 @@ huff_t* create_huff_tree(priority_queue_t* priority_queue) {
 			return create_huff_node(&item, freq_sum, huff_left, huff_right, false);
 			
 		}
-		/* Caso o nó da direita seja não folha, e com mesma frequência do da esquerda, que é folha, coloca ele para esquerda */
+			/* Caso o nó da direita seja não folha, e com mesma frequência do da esquerda, que é folha, coloca ele para esquerda */
 		else if ((*(uint8_t*) huff_right->item == '*') && (*(uint8_t*) huff_left->item != '*') &&
 				 (freq_left == freq_right)) {
 			huff_father = create_huff_node(&item, freq_sum, huff_right, huff_left, false);
@@ -67,15 +67,19 @@ printf("\n");*/
 void print_preorder(huff_t* root) {
 	
 	if (!is_tree_empty(root)) {
+		bool is_control = *(uint8_t*) root->item == '\\';
+		
 		if (*(uint8_t*) root->item == '*') {
 			printf("%c ", *(uint8_t*) root->item);
-		} else if (*(uint8_t*) root->item == '\\') {
+		} else if (is_control) {
 			printf("(%c) ", *(uint8_t*) root->left_child->item);
 		} else {
 			printf("(%c) ", *(uint8_t*) root->item);
 		}
 		
-		print_preorder(root->left_child);
+		if (!is_control) {
+			print_preorder(root->left_child);
+		}
 		print_preorder(root->right_child);
 	}
 }
