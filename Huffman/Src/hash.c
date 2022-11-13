@@ -12,8 +12,8 @@ void put(hash_t* ht, void*item, int shift_bit, unsigned short int newbyte,uint64
     int g = *(int*)item % BYTE_RANGE;
     ht->table[g] = (table_t*)malloc(sizeof(table_t));
     ht->table[g]->byte = item;
-    ht->table[g]->newbyte = newbyte>>1;
-    ht->table[g]->shift_bit = shift_bit;
+    ht->table[g]->new_byte = newbyte >> 1;
+    ht->table[g]->new_byte_size = shift_bit;
     ht->table[g]->freq = freq;
 
 

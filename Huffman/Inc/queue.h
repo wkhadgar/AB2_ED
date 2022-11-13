@@ -46,6 +46,4 @@ void print_queue(priority_queue_t* priority_queue);
  * @param right_child Filho a direita do nó.
  * @return Retorna um ponteiro para a alocação de um nó.
  */
-
-huff_t* create_huff_node(void*item, int freq, huff_t* left_child, huff_t* right_child);
-
+huff_t* create_huff_node(void* item, uint64_t freq, huff_t* left_child, huff_t* right_child, bool is_before_tree);

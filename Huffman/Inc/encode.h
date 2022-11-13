@@ -12,11 +12,6 @@ void presentation();
 void compress();
 
 /**
- * @brief Interface visual.
- */
-void menu();
-
-/**
  * @brief Cria a nova codificação dos bytes.
  * 
  * @param root Ponteiro para a raiz da ávore de huffman.
