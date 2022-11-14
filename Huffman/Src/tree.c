@@ -1,3 +1,6 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -29,10 +32,10 @@ huff_t* create_huff_tree(priority_queue_t* priority_queue) {
 		//printf("Criando um pai para os bytes: %X e %X\n",*(unsigned char*)huff_left->item,*(unsigned char*)huff_right->item);
 		
 		freq_sum = 0;
-		uint64_t freq_left = *(uint64_t*) (*(uint8_t*) huff_left->item == '\\' ? huff_left->left_child
-																			   : huff_left)->freq;
-		uint64_t freq_right = *(uint64_t*) (*(uint8_t*) huff_right->item == '\\' ? huff_right->left_child
-																				 : huff_right)->freq;
+		uint64_t freq_left = *(uint64_t*) (CHECK_IS_CONTROL(huff_left) ? huff_left->left_child
+																	   : huff_left)->freq;
+		uint64_t freq_right = *(uint64_t*) (CHECK_IS_CONTROL(huff_right) ? huff_right->left_child
+																		 : huff_right)->freq;
 		
 		freq_sum = freq_left + freq_right;
 		
@@ -67,14 +70,13 @@ printf("\n");*/
 void print_preorder(huff_t* root) {
 	
 	if (!is_tree_empty(root)) {
-		bool is_control = *(uint8_t*) root->item == '\\';
+		bool is_control = CHECK_IS_CONTROL(root);
 		
 		if (*(uint8_t*) root->item == '*') {
 			printf("%c ", *(uint8_t*) root->item);
-		} else if (is_control) {
-			printf("(%c) ", *(uint8_t*) root->left_child->item);
 		} else {
-			printf("(%c) ", *(uint8_t*) root->item);
+			is_control ? printf("(0x%X [%c]) ", *(uint8_t*) root->left_child->item, *(uint8_t*) root->left_child->item)
+					   : printf("(0x%X [%c]) ", *(uint8_t*) root->item, *(uint8_t*) root->item);
 		}
 		
 		if (!is_control) {
@@ -88,7 +90,12 @@ bool is_tree_empty(huff_t* root) {
 	return root == NULL;
 }
 
-int tree_size(huff_t* root) {
-	if (root == NULL) return 0;
-	else return 1 + tree_size(root->left_child) + tree_size(root->right_child);
+uint16_t tree_size(huff_t* root) {
+	if (root == NULL) {
+		return 0;
+	} else {
+		return 1 + (CHECK_IS_CONTROL(root) ? 0 : tree_size(root->left_child)) + tree_size(root->right_child);
+	}
 }
+
+#pragma clang diagnostic pop

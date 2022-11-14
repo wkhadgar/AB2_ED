@@ -17,9 +17,9 @@ void enqueue(priority_queue_t* priority_queue, huff_t* new_huff) {
 	uint64_t head_freq;
 	
 	if (priority_queue->head != NULL) {
-		new_huff_freq = *(uint64_t*) ((*(uint8_t*) new_huff->item == '\\') ? new_huff->left_child
-																		   : new_huff)->freq;
-		head_freq = *(uint32_t*) ((*(uint8_t*) ((huff_t*) priority_queue->head)->item == '\\')
+		new_huff_freq = *(uint64_t*) (CHECK_IS_CONTROL(new_huff) ? new_huff->left_child
+																 : new_huff)->freq;
+		head_freq = *(uint32_t*) (CHECK_IS_CONTROL(((huff_t*) priority_queue->head))
 								  ? ((huff_t*) priority_queue->head)->left_child
 								  : ((huff_t*) priority_queue->head))->freq;
 	}
@@ -32,9 +32,10 @@ void enqueue(priority_queue_t* priority_queue, huff_t* new_huff) {
 	} else {
 		huff_t* current_node = (huff_t*) priority_queue->head;
 		/** Percorre a fila até chegar no final, ou enquanto o novo nó tem frequência maior que o próximo */
-		while ((current_node->next != NULL) && (new_huff_freq > *(uint64_t*) ((*(uint8_t*) current_node->next->item == '\\')
-																			   ? current_node->next->left_child
-																			   : current_node->next)->freq)) {
+		while ((current_node->next != NULL) &&
+			   (new_huff_freq > *(uint64_t*) ((*(uint8_t*) current_node->next->item == '\\')
+											  ? current_node->next->left_child
+											  : current_node->next)->freq)) {
 			current_node = current_node->next; /**< Avança para o próximo nó */
 		}
 		
@@ -65,51 +66,8 @@ void print_queue(priority_queue_t* priority_queue) {
 	
 	/*Imprime o byte na tela, representando-o como um uint8_t;*/
 	for (int i = 0; i < priority_queue->size; i++) {
-		if (*(uint8_t*) aux->item == '\\') {
-			printf("%c ", *(uint8_t*) aux->left_child->item);
-		} else {
-			printf("%c ", *(uint8_t*) aux->item);
-		}
+		printf("'%c' ", *(uint8_t*) (CHECK_IS_CONTROL(aux) ? aux->left_child : aux)->item);
 		aux = aux->next;
 	}
 	
-}
-
-huff_t* create_huff_node(void* item, uint64_t freq, huff_t* left_child, huff_t* right_child, bool is_before_tree) {
-	/*Faz um ponteiro guardar o endereço da alocação do nó.*/
-	huff_t* new_huff = (huff_t*) malloc(sizeof(huff_t));
-	new_huff->left_child = left_child;
-	new_huff->right_child = right_child;
-	new_huff->next = NULL;
-	
-	/*Faz o void* guardar o endereço da alocação de um uint8_t.*/
-	new_huff->item = malloc(sizeof(uint8_t));
-	new_huff->freq = malloc((sizeof(uint64_t)));
-	
-	/**
-	 * Faz o item do nó alocado guardar o valor que está sendo apontado pelo item do parâmetro
-	 * Se lê: o conteúdo do item do nó recebe o valor do conteúdo do item do parâmetro
-	 */
-	*(uint8_t*) new_huff->item = *(uint8_t*) item;
-	*(uint64_t*) new_huff->freq = freq;
-	
-	if (is_before_tree && (*(uint8_t*) item == '\\' || *(uint8_t*) item == '*')) {
-		/**
-		 * Caso leia '\' ou '*' durante a montagem da fila de prioridades,
-		 * cria um nó de controle, apenas com item '\' e filho da esquerda sendo a folha alvo.
-		 *
-		 * Sempre que lermos o '\' na arvore, usamos os valores do seu filho da esquerda como uma folha.
-		 */
-		huff_t* control_node = (huff_t*) malloc(sizeof(huff_t));
-		control_node->item = malloc(sizeof(uint8_t));
-		*(uint8_t*) control_node->item = '\\';
-		control_node->right_child = NULL;
-		control_node->next = NULL;
-		control_node->freq = NULL;
-		
-		control_node->left_child = new_huff;
-		return control_node;
-	}
-	
-	return new_huff;
 }

@@ -1,6 +1,6 @@
 #include "huff_defines.h"
 
-void put(hash_t* ht, void*item, int shift_bit, unsigned short int newbyte, uint64_t freq);
+void put(hash_t* ht, void*item, uint8_t shift_bit, uint16_t new_byte, uint64_t freq);
 
 /**
  * @brief inicializa a hash table.

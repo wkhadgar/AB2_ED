@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include "encode.h"
 #include "huff_defines.h"
@@ -9,7 +6,18 @@
 #include "hash.h"
 #include <math.h>
 
-void compress() {
+/**
+ * @brief Cria a nova codificação dos bytes.
+ *
+ * @param root Ponteiro para a raiz da ávore de huffman.
+ * @param ht Ponteiro para a hash table.
+ * @param shift_bit Quantidade de bits da nova codificação.
+ * @param newbyte Variável para guardar os bits da codificação.
+ * @param bit bit a ser adicionado a nova representação.
+ */
+static void create_encoding(huff_t* root, hash_t* ht, uint32_t shift_bit, uint32_t newbyte, uint8_t bit);
+
+void encode() {
 	
 	uint8_t file_in_name[MAX_FILE_NAME_SIZE];
 	uint8_t file_out_name[MAX_FILE_NAME_SIZE];
@@ -31,8 +39,8 @@ void compress() {
 	}
 	
 	/** Leitura do arquivo */
-	int cr;
-	int input;
+	uint32_t cr;
+	uint32_t input;
 	scanf("%s", file_in_name);
 	file_in = fopen(file_in_name, "rb");
 	
@@ -44,7 +52,7 @@ void compress() {
 		
 		scanf("%d", &input);
 		if (input == 1) {
-			compress();
+			encode();
 			return;
 		} else if (input == 2) {
 			return;
@@ -76,14 +84,16 @@ void compress() {
 	/*Os comandos abaixo são apena para testar a fila.*/
 	{
 		/*Teste do enqueue.*/
-		printf("This is the priority queue.");
+		printf("A fila de prioridades ficou assim: ");
 		print_queue(priority_queue);
 		printf("\n\n");
 		/*Teste da função dequeue.*/
 		/*node_t*node = dequeue(priority_queue);
-		printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);
+		printf("\nThe dequeued item is: %X\n",*(uint8_t
+		 *)node->value->item);
 		node = dequeue(priority_queue);
-		printf("\nThe dequeued item is: %X\n",*(unsigned char*)node->value->item);*/
+		printf("\nThe dequeued item is: %X\n",*(uint8_t
+		 *)node->value->item);*/
 		
 	}
 	
@@ -92,97 +102,108 @@ void compress() {
 	{
 		print_preorder(tree);
 		//print_queue(priority_queue);
-		printf("\n The tree has a size of: %d\n", tree_size(tree));
+		printf("\n"
+			   " A arvore tem tamanho %d.\n", tree_size(tree));
 	}
 	
-	create_coding(tree, ht, 0, 0, 0, 0);
+	create_endoded_ht(tree, ht);
 	print_coding(ht);
 	
-	int bits = total_bits(ht);
-	int totalbytes = total_bytes(bits);
+	uint64_t num_bits = total_bits(ht);
+	uint64_t num_bytes = total_bytes((double) num_bits);
 	
-	printf("The compressed/encoded file_in will have %d bits and %d bytes.\n\n", bits, totalbytes);
+	printf("O arquivo codificado tem %llu bytes (%llu bits).\n"
+		   "\n", num_bytes, num_bits);
 	
-	int treesize = tree_size(tree);
-	int trash = (totalbytes * 8) - bits;
+	uint32_t treeSize = tree_size(tree);
+	uint32_t trash = 8 - (num_bits % 8); /**< 8 é o tamanho de um byte */
 	
-	printf("The trash has %d bits .\n", trash);
+	printf("O tamanho do lixo é %d bits.\n", trash);
 	
-	printf("\nInsert the compressed/encoded file_in name without it's extension:\n-> ");
+	printf("\n"
+		   "Insira o nome do arquivo compactado:\n"
+		   "-> ");
 	scanf("%s", file_out_name);
 	
-	strcat(file_out_name, ".zap");
+	strcat(file_out_name, ".zap2");
 	
 	printf("\n");
 	file_out = fopen(file_out_name, "wb");
 	
-	print_header(trash, treesize, file_out, tree);//Imprime o header no novo arquivo codificado.
+	/** Imprime o header no novo arquivo codificado. */
+	print_header(trash, treeSize, file_out, tree);
 	
-	file_in = fopen(file_in_name, "rb");
+	file_in = fopen(file_in_name, "rb"); /**< Reabre o arquivo para poder transcrever com a hash */
 	
-	int nbits, newbytesize = 0;
-	
-	
-	unsigned char writebyte, c, aux = 0;
-	int control, empty_bits = 8;
+	uint8_t new_byte_size, new_byte, aux = 0;
+	int8_t empty_bits = 8;
 	
 	while (fscanf(file_in, "%c", &current_char) != EOF) {
 		
-		control = ht->table[current_char]->new_byte_size;
-		empty_bits = empty_bits - control;
-		c = ht->table[current_char]->new_byte;
-		if (empty_bits <= 0) {
-			aux = aux | (c >> abs(empty_bits));
+		new_byte_size = ht->table[current_char]->new_byte_size;
+		new_byte = ht->table[current_char]->new_byte;
+		
+		empty_bits = (int8_t) (empty_bits - new_byte_size);
+		
+		while (empty_bits <= 0) { /** Quando tamanho do new_byte for maior ou igual a 8 */
+			aux = aux | (new_byte >> abs(empty_bits)); /** Seleciona apenas o primeiro byte do new_byte */
 			print_byte(aux);
-			fputc(aux, file_out);
-			empty_bits = 8 + empty_bits;
+			fputc(aux, file_out); /* E coloca ele no arquivo */
+			empty_bits = (int8_t) (8 + empty_bits); /* Vemos o que falta */
 			aux = 0;
-			while (empty_bits < 0) {
-				aux |= (c >> abs(empty_bits));
-				fputc(aux, file_out);
-				print_byte(aux);
-				empty_bits = 8 + empty_bits;
-				aux = 0;
-			}
-			aux |= (c << empty_bits);
-		} else aux |= (c << empty_bits);
-		
-		
+//			while (empty_bits < 0) { /* Repete até ficar ok */
+//				aux = aux | (new_byte >> abs(empty_bits));
+//				print_byte(aux);
+//				fputc(aux, file_out);
+//				empty_bits = 8 + empty_bits;
+//				aux = 0;
+//			}
+		}
+		aux = aux | (new_byte << empty_bits);
 	}
-	if (trash != 0)fputc(aux, file_out);
+	
+	if (trash != 0){
+		fputc(aux, file_out);
+	}
 	print_byte(aux);
 	fclose(file_out);
 	fclose(file_in);
 	
-	fflush(stdin);
-	printf("\nCompression/Encoding done!\nPress 0 to continue.\n\n");
-	scanf("%d", &cr);
-	
-	return;
+	printf("\n"
+		   "Codificação completa!\n"
+		   "Digite 0 para continuar.\n"
+		   "\n");
+	scanf("%u", &cr);
 }
 
-void create_coding(huff_t* root, hash_t* ht, int shift_bit, unsigned int newbyte, int byte, int flag) {
+static void create_encoding(huff_t* root, hash_t* ht, uint32_t shift_bit, uint32_t newbyte, uint8_t bit) {
 	if (root == NULL)
 		return;
 	
-	if (flag) {
-		newbyte = newbyte | byte;//Adiciona o bit no novo byte. Sempre adiciona no lsb.
-		newbyte = newbyte << 1;//Abre espaço para o próximo bit ser adicionado.
+	newbyte = newbyte | bit; /**< Adiciona o bit no novo bit. Sempre adiciona no lsb.*/
+	newbyte = newbyte << 1; /**< Abre espaço para o próximo bit ser adicionado. */
+	
+	if (CHECK_IS_CONTROL(root)) { /** Se é um nó de controle (que por consequência, é uma "folha") */
+		put(ht, root->left_child->item, shift_bit, newbyte, *(uint64_t*) root->left_child->freq);
+	} else if ((root->left_child == NULL && root->right_child == NULL)) {
+		/** Senão, se for uma folha, coloca o item na hash. */
+		put(ht, root->item, shift_bit, newbyte, *(uint64_t*) root->freq);
 	}
 	
-	
-	if (root->left_child == NULL && root->right_child == NULL) {//Se achar uma folha, coloca o item na hash.
-		put(ht, root->item, shift_bit, newbyte, root->freq);
+	if (!CHECK_IS_CONTROL(root)) {
+		create_encoding(root->left_child, ht, shift_bit + 1, newbyte, 0);
 	}
-	create_coding(root->left_child, ht, shift_bit + 1, newbyte, 0, 1);
-	create_coding(root->right_child, ht, shift_bit + 1, newbyte, 1, 1);
-	
+	create_encoding(root->right_child, ht, shift_bit + 1, newbyte, 1);
+}
+
+void create_endoded_ht(huff_t* root, hash_t* ht) {
+	create_encoding(root, ht, 0, 0, 0);
 }
 
 void print_coding(hash_t* ht) {
-	for (int i = 0; i < BYTE_RANGE; i++) {
+	for (uint32_t i = 0; i < BYTE_RANGE; i++) {
 		if (ht->table[i] != NULL) {
-			printf("The byte %c new representation has ", *(unsigned char*) ht->table[i]->byte);
+			printf("The byte %c new representation has ", *(uint8_t*) ht->table[i]->byte);
 			print_bits(ht->table[i]);
 			printf("\n");
 		}
@@ -192,94 +213,91 @@ void print_coding(hash_t* ht) {
 }
 
 void print_bits(table_t* table) {
-	int g = 1;
-	unsigned char b;
-	b = table->new_byte;
-	printf("%d bits, it's int equals to %d and the new bits are:", table->new_byte_size, table->new_byte);
-	for (int i = table->new_byte_size - 1; i >= 0; i--) {
+	uint16_t new_byte;
+	new_byte = table->new_byte;
+	printf("%d bits, it's uint32_t equals to %d and the new bits are:", table->new_byte_size, new_byte);
+	
+	for (int16_t i = table->new_byte_size - 1; i >= 0; i--) {
 		
-		b = table->new_byte >> i;
-		//printf("%d",i);
-		if (g & b)
+		new_byte = table->new_byte >> i;
+		
+		if (new_byte & 1) {
 			printf("1");
-		else
+		} else {
 			printf("0");
-		//a = a>>1;
-		b = table->new_byte;
-		
-	}
-	
-}
-
-int total_bits(hash_t* ht) {
-	int bits = 0;
-	int i;
-	for (i = 0; i < BYTE_RANGE; i++)
-		if (ht->table[i] != NULL)
-			bits += (ht->table[i]->new_byte_size * ht->table[i]->freq);
-	
-	return bits;
-}
-
-int total_bytes(double bits) {
-	return ceil(bits / 8);
-}
-
-void print_header(int trash, int treesize, FILE* fout, huff_t* tree) {
-	
-	unsigned char bytes[2];
-	bytes[0] = trash << 5 | treesize
-			>> 8; //Coloca o lixo nas três primeiras posições. e coloca os 5 primeiros bits do tamanho da arvore nas últimas 5.
-	bytes[1] = treesize;  //Coloca o restante do tamanho da árvore no segundo byte.                        
-	
-	fputc(bytes[0], fout);//O fputc converte o byte para unsigned char antes de printar no arquivo.
-	fputc(bytes[1], fout);
-	
-	//fprintf(fout,"%d",bytes);
-	
-	
-	print_tree_file(tree, fout);
-}
-
-void print_tree_file(huff_t* tree, FILE* fout) {
-	if (tree != NULL) {
-		if (tree->freq != 0) {
-			if (((*(unsigned char*) tree->item == 92) || *(unsigned char*) tree->item == 42) &&
-				(tree->left_child == NULL && tree->right_child == NULL))
-				fputc(92, fout);
-			fputc(*(int*) tree->item, fout);
-			print_tree_file(tree->left_child, fout);
-			print_tree_file(tree->right_child, fout);
 		}
 	}
 }
 
-int print_byte(int a) {
+uint64_t total_bits(hash_t* ht) {
+	uint64_t num_bits = 0;
+	uint16_t i;
 	
-	int g = 1;
-	unsigned char b;
-	b = a;
-	for (int i = 7; i >= 0; i--) {
+	for (i = 0; i < BYTE_RANGE; i++)
+		if (ht->table[i] != NULL) {
+			num_bits += (ht->table[i]->new_byte_size * ht->table[i]->freq);
+		}
+	
+	return num_bits;
+}
+
+uint64_t total_bytes(double bits) {
+	return ceil(bits / 8.0);
+}
+
+void print_header(uint8_t trash, uint16_t treesize, FILE* fout, huff_t* tree) {
+	
+	uint8_t header_first_bytes[2];
+	/** Coloca o lixo nas três primeiras posições, depois coloca os 5 primeiros bits do tamanho da arvore nas últimas 5. */
+	header_first_bytes[0] = trash << 5 | treesize >> 8;
+	
+	/** Coloca o restante do tamanho da árvore no segundo byte. */
+	header_first_bytes[1] = treesize;
+	
+	fputc(header_first_bytes[0], fout);//O fputc converte o byte para uint8_t antes de printar no arquivo.
+	fputc(header_first_bytes[1], fout);
+	
+	fprint_tree_bytes(tree, fout);
+}
+
+void fprint_tree_bytes(huff_t* root, FILE* fout) {
+	if (root != NULL) {
+		if (CHECK_IS_CONTROL(root)) {
+			fputc('\\', fout);
+			fputc(*(uint8_t*) root->left_child->item, fout);
+		} else {
+			fputc(*(uint8_t*) root->item, fout);
+		}
 		
-		b = a >> i;
-		//printf("%d",i);
-		if (g & b)
+		if (!CHECK_IS_CONTROL(root)) {
+			fprint_tree_bytes(root->left_child, fout);
+		}
+		fprint_tree_bytes(root->right_child, fout);
+	}
+}
+
+void print_byte(uint8_t byte) {
+	
+	uint8_t b;
+	
+	for (int8_t i = 7; i >= 0; i--) {
+		
+		b = byte >> i;
+		if (b & 1) {
 			printf("1");
-		else
+		} else {
 			printf("0");
-		//a = a>>1;
-		b = a;
-		
+		}
 	}
 	printf("\n");
 }
 
-int is_bit_i_set(unsigned char c, int i) {
-	unsigned char mask = 1 << i;
-	return mask & c;
+bool is_bit_i_set(uint8_t byte, uint8_t i) {
+	uint8_t mask = 1 << i;
+	return mask & byte;
 }
 
-unsigned char set_bit(unsigned char c, int i) {
-	unsigned char mask = 1 << i;
-	return mask | c;
+uint8_t set_bit(uint8_t byte, uint8_t i) {
+	uint8_t mask = 1 << i;
+	return mask | byte;
 }

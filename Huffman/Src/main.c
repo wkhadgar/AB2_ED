@@ -1,18 +1,17 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include "encode.h"
-#include "queue.h"
 #include "huff_defines.h"
+#include "encode.h"
+#include "decode.h"
+#include "queue.h"
 
 int menu(void); /** UI do projeto */
 
 int main() {
 	
-	//presentation();
-	while (menu()){}
+	presentation();
+	printf("\n");
+	while (menu()) { }
 	
-    printf("The real huffman encoding are the friends we made along the way.\n\n\n\n\n");
+	printf("The real huffman encoding are the friends we made along the way.\n\n\n\n\n");
 }
 
 int menu(void) {
@@ -20,7 +19,7 @@ int menu(void) {
 	
 	while (input != 0) {
 		
-		printf("Bem-vindo ao codificador de Huffman v2.0, escolha uma das opções a seguir.\n"
+		printf("Bem-vindo ao codificador de Huffman v2.0, escolha uma das opcoes a seguir.\n"
 			   "[1] - Comprimir um arquivo.\n"
 			   "[2] - Descomprimir um arquivo codificado.\n"
 			   "[0] - Sair.\n"
@@ -28,16 +27,14 @@ int menu(void) {
 		
 		scanf("%d", &input);
 		if (input == 1) {
-			compress();
+			encode();
 		} else if (input == 0) {
 			return 0;
 		} else if (input == 2) {
-		} else {
-			return -2;
+			decode();
 		}
-		
-		return -1;
 	}
+	return 0;
 }
 
 
