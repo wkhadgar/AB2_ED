@@ -7,6 +7,12 @@
 
 void decode(void);
 
+/**
+ * @brief Monta uma árvore de huffman a partir de uma string em pré-ordem.
+ *
+ * @param pre_order_str string a ser montada.
+ * @return huff_t* [out] Ponteiro para a raiz da árvore de huffman.
+ */
 huff_t* create_huff_tree_from_str(const uint8_t* pre_order_str);
 
 #endif //AB2_ED_DECODE_H

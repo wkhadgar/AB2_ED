@@ -54,8 +54,3 @@ void print_byte(uint8_t byte);
 void print_header(uint8_t trash, uint16_t treesize, FILE* fout, huff_t* tree);
 
 void fprint_tree_bytes(huff_t* root, FILE* fout);
-
-
-bool is_bit_i_set(uint8_t byte, uint8_t i);
-
-uint8_t set_bit(uint8_t byte, uint8_t i);

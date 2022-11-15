@@ -145,27 +145,27 @@ void encode() {
 		
 		empty_bits = (int8_t) (empty_bits - new_byte_size);
 		
-		while (empty_bits <= 0) { /** Quando tamanho do new_byte for maior ou igual a 8 */
+		if (empty_bits <= 0) { /** Quando tamanho do new_byte for maior ou igual a 8 */
 			aux = aux | (new_byte >> abs(empty_bits)); /** Seleciona apenas o primeiro byte do new_byte */
-			print_byte(aux);
 			fputc(aux, file_out); /* E coloca ele no arquivo */
 			empty_bits = (int8_t) (8 + empty_bits); /* Vemos o que falta */
 			aux = 0;
-//			while (empty_bits < 0) { /* Repete até ficar ok */
-//				aux = aux | (new_byte >> abs(empty_bits));
-//				print_byte(aux);
-//				fputc(aux, file_out);
-//				empty_bits = 8 + empty_bits;
-//				aux = 0;
-//			}
+			while (empty_bits < 0) { /* Repete até ficar ok */
+				aux = aux | (new_byte >> abs(empty_bits));
+				fputc(aux, file_out);
+				empty_bits = 8 + empty_bits;
+				aux = 0;
+			}
+			aux = aux | (new_byte << empty_bits);
+		} else {
+			aux = aux | (new_byte << empty_bits);
 		}
-		aux = aux | (new_byte << empty_bits);
 	}
 	
-	if (trash != 0){
+	if (trash != 0) {
 		fputc(aux, file_out);
 	}
-	print_byte(aux);
+	
 	fclose(file_out);
 	fclose(file_in);
 	
@@ -293,11 +293,11 @@ void print_byte(uint8_t byte) {
 }
 
 bool is_bit_i_set(uint8_t byte, uint8_t i) {
-	uint8_t mask = 1 << i;
+	uint8_t mask = 128 >> i;
 	return mask & byte;
 }
 
 uint8_t set_bit(uint8_t byte, uint8_t i) {
-	uint8_t mask = 1 << i;
+	uint8_t mask = 128 >> i;
 	return mask | byte;
 }

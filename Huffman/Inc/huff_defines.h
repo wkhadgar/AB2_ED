@@ -71,4 +71,8 @@ typedef struct hash {
  */
 huff_t* create_huff_node(void* item, uint64_t freq, huff_t* left_child, huff_t* right_child, bool is_before_tree);
 
+bool is_bit_i_set(uint8_t byte, uint8_t i);
+
+uint8_t set_bit(uint8_t byte, uint8_t i);
+
 #endif /** HUFF_DEFINES_H */
