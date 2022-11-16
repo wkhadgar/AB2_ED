@@ -9,12 +9,12 @@
 /**
  * @brief Define se o número de reruns será usado como tamanho da pool se verdadeiro, ou se o tamanho da pool será fixo caso falso.
  */
-#define DYN_SIZE_RUN 0
+#define DYN_SIZE_RUN 1
 
 /**
  * @brief Número de repetições para a pesquisa na estrutura.
  */
-#define RERUNS 100
+#define RERUNS 500
 
 #if DYN_SIZE_RUN == 0
 /**
