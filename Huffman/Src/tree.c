@@ -25,19 +25,17 @@ huff_t* create_huff_tree(priority_queue_t* priority_queue) {
 		huff_right = dequeue(priority_queue);
 		
 		/*Soma a frequência dos dois nós desenfileirados.*/
+		uint64_t freq_left = *(uint64_t*) (CHECK_IS_CONTROL(huff_left) ? huff_left->left_child
+																	   : huff_left)->freq;
+		uint64_t freq_right = *(uint64_t*) (CHECK_IS_CONTROL(huff_right) ? huff_right->left_child
+																		 : huff_right)->freq;
+		freq_sum = freq_left + freq_right;
 		
 		/* Asterisco para criar o pai. == 42 */
 		uint8_t item = '*';
 		
 		//printf("Criando um pai para os bytes: %X e %X\n",*(unsigned char*)huff_left->item,*(unsigned char*)huff_right->item);
 		
-		freq_sum = 0;
-		uint64_t freq_left = *(uint64_t*) (CHECK_IS_CONTROL(huff_left) ? huff_left->left_child
-																	   : huff_left)->freq;
-		uint64_t freq_right = *(uint64_t*) (CHECK_IS_CONTROL(huff_right) ? huff_right->left_child
-																		 : huff_right)->freq;
-		
-		freq_sum = freq_left + freq_right;
 		
 		/*Se a árvore estiver vazia, cria um pai para os últimos dois nós e retorna essa pai como raiz da árvore.*/
 		if (priority_queue->size == 0) {
@@ -94,7 +92,11 @@ uint16_t tree_size(huff_t* root) {
 	if (root == NULL) {
 		return 0;
 	} else {
-		return 1 + (CHECK_IS_CONTROL(root) ? 0 : tree_size(root->left_child)) + tree_size(root->right_child);
+		return 1 + (
+#ifdef TREE_TRUE_SIZE
+				CHECK_IS_CONTROL(root) ? 0 :
+#endif
+				tree_size(root->left_child)) + tree_size(root->right_child);
 	}
 }
 

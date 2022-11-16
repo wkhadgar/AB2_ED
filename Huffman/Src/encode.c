@@ -17,7 +17,7 @@
  */
 static void create_encoding(huff_t* root, hash_t* ht, uint32_t shift_bit, uint32_t newbyte, uint8_t bit);
 
-void encode() {
+function_retval_t encode() {
 	
 	uint8_t file_in_name[MAX_FILE_NAME_SIZE];
 	uint8_t file_out_name[MAX_FILE_NAME_SIZE];
@@ -34,28 +34,31 @@ void encode() {
 	
 	/** Enfeite visual */
 	{
-		//presentation();
-		printf("Type the file_in's name with it's correct extension:\n-> ");
+		presentation();
+		printf("\n"
+			   "Codificacao selecionada!\n");
 	}
+	printf("\n"
+		   "Digite o caminho completo do arquivo a ser codificado:\n"
+		   "-> ");
+	scanf("%s", file_in_name);
 	
 	/** Leitura do arquivo */
 	uint32_t cr;
 	uint32_t input;
-	scanf("%s", file_in_name);
 	file_in = fopen(file_in_name, "rb");
 	
 	if (file_in == NULL) {
-		printf("Nome de arquivo inválido, ou o arquivo não foi encontrado. O que fazer?\n"
+		printf("Nome de arquivo invalido, ou o arquivo nao foi encontrado. O que fazer?\n"
 			   "[1] - Tentar comprimir novamente...\n"
 			   "[2] - Retornar para o menu.\n"
 			   "-> ");
 		
 		scanf("%d", &input);
 		if (input == 1) {
-			encode();
-			return;
+			return ENCODE_REPEAT;
 		} else if (input == 2) {
-			return;
+			return ENCODE_CANCEL;
 		}
 	}
 	
@@ -70,15 +73,15 @@ void encode() {
 	fclose(file_in);
 	
 	/** Montagem da fila de prioridades */
-	uint8_t byte_value = 0;
+	uint8_t byte_value = 255;
 	do {
 		if (frequencies_map[byte_value] != 0) {
 			huff_t* huff = create_huff_node(&byte_value, frequencies_map[byte_value], NULL, NULL, true);
 			enqueue(priority_queue, huff);
-			//printf("O byte %X aparece %llu vezes\n", byte_value, frequencies_map[byte_value]);
+			printf("O byte 0x%X [%c] aparece %llu vezes\n", byte_value, byte_value, frequencies_map[byte_value]);
 		}
-		byte_value++;
-	} while (byte_value != 0); /** Quando o byte der overflow, para.*/
+		byte_value--;
+	} while (byte_value != 255); /** Quando o byte der overflow, para.*/
 	
 	
 	/*Os comandos abaixo são apena para testar a fila.*/
@@ -97,10 +100,11 @@ void encode() {
 		
 	}
 	
-	/*Debugging da árvore.*/
 	huff_t* tree = create_huff_tree(priority_queue);
+	
+	/*Debugging da árvore.*/
 	{
-		print_preorder(tree);
+		//print_preorder(tree);
 		//print_queue(priority_queue);
 		printf("\n"
 			   " A arvore tem tamanho %d.\n", tree_size(tree));
@@ -118,7 +122,7 @@ void encode() {
 	uint32_t treeSize = tree_size(tree);
 	uint32_t trash = 8 - (num_bits % 8); /**< 8 é o tamanho de um byte */
 	
-	printf("O tamanho do lixo é %d bits.\n", trash);
+	printf("O tamanho do lixo eh %d bits.\n", trash);
 	
 	printf("\n"
 		   "Insira o nome do arquivo compactado:\n"
@@ -135,7 +139,8 @@ void encode() {
 	
 	file_in = fopen(file_in_name, "rb"); /**< Reabre o arquivo para poder transcrever com a hash */
 	
-	uint8_t new_byte_size, new_byte, aux = 0;
+	uint8_t new_byte_size, aux = 0;
+	uint16_t new_byte;
 	int8_t empty_bits = 8;
 	
 	while (fscanf(file_in, "%c", &current_char) != EOF) {
@@ -170,7 +175,7 @@ void encode() {
 	fclose(file_in);
 	
 	printf("\n"
-		   "Codificação completa!\n"
+		   "Codificacao completa!\n"
 		   "Digite 0 para continuar.\n"
 		   "\n");
 	scanf("%u", &cr);
@@ -203,7 +208,7 @@ void create_endoded_ht(huff_t* root, hash_t* ht) {
 void print_coding(hash_t* ht) {
 	for (uint32_t i = 0; i < BYTE_RANGE; i++) {
 		if (ht->table[i] != NULL) {
-			printf("The byte %c new representation has ", *(uint8_t*) ht->table[i]->byte);
+			printf("O byte %c tera ", *(uint8_t*) ht->table[i]->byte);
 			print_bits(ht->table[i]);
 			printf("\n");
 		}
@@ -214,8 +219,7 @@ void print_coding(hash_t* ht) {
 
 void print_bits(table_t* table) {
 	uint16_t new_byte;
-	new_byte = table->new_byte;
-	printf("%d bits, it's uint32_t equals to %d and the new bits are:", table->new_byte_size, new_byte);
+	printf("%d bits, sendo eles: ", table->new_byte_size);
 	
 	for (int16_t i = table->new_byte_size - 1; i >= 0; i--) {
 		
@@ -276,28 +280,7 @@ void fprint_tree_bytes(huff_t* root, FILE* fout) {
 	}
 }
 
-void print_byte(uint8_t byte) {
-	
-	uint8_t b;
-	
-	for (int8_t i = 7; i >= 0; i--) {
-		
-		b = byte >> i;
-		if (b & 1) {
-			printf("1");
-		} else {
-			printf("0");
-		}
-	}
-	printf("\n");
-}
-
 bool is_bit_i_set(uint8_t byte, uint8_t i) {
 	uint8_t mask = 128 >> i;
 	return mask & byte;
-}
-
-uint8_t set_bit(uint8_t byte, uint8_t i) {
-	uint8_t mask = 128 >> i;
-	return mask | byte;
 }

@@ -5,7 +5,12 @@
 #include "huff_defines.h"
 #include "tree.h"
 
-void decode(void);
+/**
+ * @brief Entry point da decodificação.
+ *
+ * @return function_retval_t Qual opção de erro a ser tomada.
+ */
+function_retval_t decode(void);
 
 /**
  * @brief Monta uma árvore de huffman a partir de uma string em pré-ordem.

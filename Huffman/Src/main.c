@@ -7,17 +7,18 @@ int menu(void); /** UI do projeto */
 
 int main() {
 	
-	presentation();
 	printf("\n");
-	while (menu()) { }
+	menu();
 	
 	printf("The real huffman encoding are the friends we made along the way.\n\n\n\n\n");
 }
 
 int menu(void) {
+	
 	int32_t input = -1;
 	
 	while (input != 0) {
+		presentation();
 		
 		printf("Bem-vindo ao codificador de Huffman v2.0, escolha uma das opcoes a seguir.\n"
 			   "[1] - Comprimir um arquivo.\n"
@@ -26,14 +27,17 @@ int menu(void) {
 			   "-> ");
 		
 		scanf("%d", &input);
-		if (input == 1) {
-			encode();
-		} else if (input == 0) {
-			return 0;
+		
+		function_retval_t function_retval = NONE_SELECTED;
+		if (input == 0) {
+			break;
+		} else if (input == 1) {
+			while (encode() == ENCODE_REPEAT) {};
 		} else if (input == 2) {
-			decode();
+			while (decode() == DECODE_REPEAT) {};
 		}
 	}
+	
 	return 0;
 }
 

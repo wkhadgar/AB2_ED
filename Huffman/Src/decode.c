@@ -1,59 +1,82 @@
 #include <string.h>
 #include "decode.h"
 
+/**
+ * @brief Máscara para os últimos 5 bits.
+ */
+#define LAST_FIVE_BITS 0b00011111
+
+/**
+ * @brief Máscara para os primeiros 3 bits.
+ */
+#define FIRST_THREE_BITS 0b11100000
+
 uint16_t current_index = 0;
 uint16_t treeSize;
 
-void decode() {
+function_retval_t decode() {
 	int32_t input;
-	uint16_t i;
+	uint16_t j;
 	uint64_t file_size;
 	uint8_t trash_size;
 	uint8_t file_name_in[MAX_FILE_NAME_SIZE];
 	uint8_t file_name_out[MAX_FILE_NAME_SIZE];
 	
+	current_index = 0;
+	treeSize = 0;
+	
 	uint8_t tree_info[2];
 	uint8_t* tree_str;
 	
-	printf("Digite o caminho completo do arquivo:\n"
+	/** Enfeite visual */
+	{
+		presentation();
+		printf("\n"
+			   "Descodificacao selecionada!\n");
+	}
+	printf("\n"
+		   "Digite o caminho completo do arquivo a ser descodificado:\n"
 		   "-> ");
 	scanf("%s", file_name_in);
+	
 	FILE* file_in = fopen(file_name_in, "rb");
-	printf("Digite o nome do arquivo de saída:\n"
+	
+	printf("Digite o nome do arquivo de saida, com sua extensao:\n"
 		   "-> ");
 	scanf("%s", file_name_out);
+	
 	FILE* file_out = fopen(file_name_out, "wb");
 	
 	
-	if (file_in == NULL) {
-		printf("Nome de arquivo inválido, ou o arquivo não foi encontrado. O que fazer?\n"
+	if ((file_in == NULL) || fscanf(file_in, "%c", &tree_info[0]) == EOF) {
+		printf("Nome de arquivo invalido, ou o arquivo nao foi encontrado. O que fazer?\n"
 			   "[1] - Tentar descodificar novamente...\n"
 			   "[2] - Retornar para o menu.\n"
 			   "-> ");
 		
 		scanf("%d", &input);
 		if (input == 1) {
-			decode();
-			return;
+			return DECODE_REPEAT;
 		} else if (input == 2) {
-			return;
+			return DECODE_CANCEL;
 		}
 	}
 	
-	fscanf(file_in, "%c", &tree_info[0]);
 	fscanf(file_in, "%c", &tree_info[1]);
 	
-	treeSize = ((((uint8_t) (tree_info[0] << 3)) >> 3) << 8) | tree_info[1];
-	trash_size = tree_info[0] >> 5;
+	treeSize = ((((uint16_t) (tree_info[0])) & LAST_FIVE_BITS) << 8) | (uint16_t) tree_info[1];
+	trash_size = (tree_info[0] & FIRST_THREE_BITS) >> 5;
 	
-	tree_str = (uint8_t*) malloc((treeSize * 2) + 1);
-	for (i = 0; i < treeSize; i++) {
-		fscanf(file_in, "%c", &tree_str[i]);
-		if ((tree_str[i] == '\\') && (tree_str[i - 1] != '\\')) {
+	tree_str = (uint8_t*) malloc(treeSize + 3); /* No máximo mais 2 de escape, mais um de fim de string. */
+	for (j = 0; j < treeSize; j++) {
+		fscanf(file_in, "%c", &tree_str[j]);
+#ifdef TREE_TRUE_SIZE
+		if ((tree_str[j] == '\\') && (tree_str[j - 1] != '\\')) {
 			treeSize++; /** Compensando o \ na leitura da string!!*/
 		}
+#endif
 	}
-	tree_str[i] = '\0';
+	tree_str[j] = '\0';
 	
 	huff_t* huff_root = create_huff_tree_from_str(tree_str);
 	
@@ -65,11 +88,11 @@ void decode() {
 	file_size -= file_offset; /**< Encontra o tamanho do arquivo, em termos de codificação. */
 	fseek(file_in, file_offset, SEEK_SET); /**< Volta para onde começamos. */
 	
-	uint8_t current_file_byte;
+	uint8_t current_file_byte, cr;
 	huff_t* current_huff_node = huff_root;
 	while (file_size-- > 1) {
 		fscanf(file_in, "%c", &current_file_byte);
-		for (i = 0; i < 8; i++) {
+		for (uint8_t  i = 0; i < 8; i++) {
 			if (CHECK_IS_CONTROL(current_huff_node)) {
 				fputc(*(uint8_t*) current_huff_node->left_child->item, file_out);
 				current_huff_node = huff_root;
@@ -84,7 +107,7 @@ void decode() {
 		}
 	}
 	
-	for (i = 0; i < (8 - trash_size); i++) { /** < Lê o último byte. */
+	for (uint8_t i = 0; i < (8 - trash_size); i++) { /** < Lê o último byte. */
 		fscanf(file_in, "%c", &current_file_byte);
 		if (CHECK_IS_CONTROL(current_huff_node)) {
 			fputc(*(uint8_t*) current_huff_node->left_child->item, file_out);
@@ -100,6 +123,11 @@ void decode() {
 	
 	fclose(file_in);
 	fclose(file_out);
+	
+	printf("\n\n"
+		   "Descodificacao completa! Digite 0 para continuar.\n"
+		   "\n");
+	scanf("%d", &cr);
 }
 
 huff_t* create_huff_tree_from_str(const uint8_t* pre_order_str) {
@@ -116,7 +144,7 @@ huff_t* create_huff_tree_from_str(const uint8_t* pre_order_str) {
 	new_node->right_child = NULL;
 	
 	/** Seta o conteúdo do nó pra o char atual. */
-	*(uint8_t*) new_node->item = *(pre_order_str + current_index);
+	*(uint8_t*) new_node->item = pre_order_str[current_index];
 	current_index++; /**< Avança na string. */
 	
 	/** Montando a árvore da pré-ordem. */
